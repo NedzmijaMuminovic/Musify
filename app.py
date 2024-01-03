@@ -1,40 +1,15 @@
 from flask import Flask, render_template, request
+import requests
+import random
 import spacy
-
-# Učitavanje engleskog modela
-nlp = spacy.load("en_core_web_sm")
 
 app = Flask(__name__)
 
-# Simulacija baze podataka
-music_database = {
-    "rock": [
-        {"title": "Stairway to Heaven", "artist": "Led Zeppelin", "year": 1971},
-        {"title": "Bohemian Rhapsody", "artist": "Queen", "year": 1975},
-        {"title": "Hotel California", "artist": "Eagles", "year": 1977}
-    ],
-    "pop": [
-        {"title": "Shape of You", "artist": "Ed Sheeran", "year": 2017},
-        {"title": "Uptown Funk", "artist": "Mark Ronson ft. Bruno Mars", "year": 2014},
-        {"title": "Happy", "artist": "Pharrell Williams", "year": 2013}
-    ],
-    "hip hop": [
-        {"title": "Sicko Mode", "artist": "Travis Scott", "year": 2018},
-        {"title": "Old Town Road", "artist": "Lil Nas X ft. Billy Ray Cyrus", "year": 2019},
-        {"title": "God's Plan", "artist": "Drake", "year": 2018}
-    ],
-    "jazz": [
-        {"title": "Take Five", "artist": "Dave Brubeck Quartet", "year": 1959},
-        {"title": "So What", "artist": "Miles Davis", "year": 1959},
-        {"title": "My Favorite Things", "artist": "John Coltrane", "year": 1961}
-    ],
-    "electronic": [
-        {"title": "Strobe", "artist": "Deadmau5", "year": 2009},
-        {"title": "Summertime Sadness", "artist": "Lana Del Rey vs. Cedric Gervais", "year": 2013},
-        {"title": "Clarity", "artist": "Zedd ft. Foxes", "year": 2012}
-    ],
-    # Dodaj više žanrova i pjesama prema potrebi
-}
+# Key za Last.fm API
+LASTFM_API_KEY = "1f409887755c3e139b87863f4adb90f3"
+
+# Učitavanje engleskog modela spaCy
+nlp = spacy.load("en_core_web_sm")
 
 user_history = {}
 
@@ -47,10 +22,38 @@ def record_user_preference(user, genre):
 def recommend_music(user, genre):
     record_user_preference(user, genre)  # Pamti preferenciju korisnika
 
-    # Povratak preporučenih pjesama
-    recommended_songs = music_database.get(genre.lower(), [])
+    # Procesuiraj tekst spaCy modelom
+    doc = nlp(genre)
 
-    return recommended_songs
+    # Dobivanje ključnih riječi (žanra) iz teksta
+    genre_keywords = [token.text.lower() for token in doc if token.is_alpha]
+
+    # API request za top pjesme iz zadanog zanra
+    api_url = f"http://ws.audioscrobbler.com/2.0/?method=tag.gettoptracks&tag={'%20'.join(genre_keywords)}&api_key={LASTFM_API_KEY}&format=json"
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        tracks = response.json().get('tracks', {}).get('track', [])
+
+        # Broj pjesama za generisanje
+        num_songs_to_recommend = min(len(tracks), 10)
+        
+        random_songs = random.sample(tracks, num_songs_to_recommend)
+
+        recommended_songs = []
+
+        for track in random_songs:
+            title = track.get('name', '')
+            artist_info = track.get('artist', {})
+            artist = artist_info.get('name', '') if artist_info else ''
+
+            # Provjeri da li nedostaje ili je prazna informacija o izvođaču
+            if title and artist:
+                recommended_songs.append({"title": title, "artist": artist})
+
+        return recommended_songs
+
+    return []
 
 @app.route('/')
 def index():
@@ -60,19 +63,9 @@ def index():
 def recommend():
     user_genre = request.form['genre']
 
-    # Procesuiraj tekst spaCy modelom
-    doc = nlp(user_genre)
+    # Preporuka na osnovu Last.fm API
+    recommended_music = recommend_music("user", user_genre.lower())
 
-    # Dobivanje ključnih riječi (žanra) iz teksta
-    genre_keywords = [token.text.lower() for token in doc if token.is_alpha]
-
-    # Pretvori ključne riječi u string
-    genre_string = " ".join(genre_keywords)
-
-    # Preporuka glazbe na temelju žanra
-    recommended_music = recommend_music("user", genre_string)  # Zamijeni "user" s pravim imenom
-
-    # Ispravljeni dio za ispis preporučenih pjesama
     if not recommended_music:
         return render_template('index.html', genre_not_found=True, user_genre=user_genre)
 

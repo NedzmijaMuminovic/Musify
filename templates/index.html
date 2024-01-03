@@ -23,7 +23,7 @@
             <p>Chatbot: I recommend the following songs:</p>
             <ul>
                 {% for song_info in recommended_music %}
-                    <li>{{ song_info['title'] }} by {{ song_info['artist'] }} ({{ song_info['year'] }})</li>
+                    <li>{{ song_info['title'] }} by {{ song_info['artist'] }}</li>
                 {% endfor %}
             </ul>
         </div>

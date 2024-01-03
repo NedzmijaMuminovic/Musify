@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Music Recommender Chatbot</title>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat">
+            <div class="chat-message">
+                <p>Chatbot: Hello! I'm your music recommender. What genre do you like?</p>
+            </div>
+        </div>
+        <form action="/recommend" method="post" class="chat-form">
+            <input type="text" name="genre" placeholder="Type your favorite genre...">
+            <button type="submit">Recommend</button>
+        </form>
+       {% if recommended_music %}
+    <div class="chat">
+        <div class="chat-message">
+            <p>Chatbot: I recommend the following songs:</p>
+            <ul>
+                {% for song_info in recommended_music %}
+                    <li>{{ song_info['title'] }} by {{ song_info['artist'] }} ({{ song_info['year'] }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% else %}
+    {% if genre_not_found %}
+        <div class="chat">
+            <div class="chat-message">
+                <p>Chatbot: I'm sorry, but I don't have recommendations for the genre "{{ user_genre }}".</p>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+    </div>
+</body>
+</html>

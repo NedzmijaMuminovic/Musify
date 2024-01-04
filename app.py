@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, redirect
 import requests
 import random
 import spacy
@@ -7,7 +7,8 @@ app = Flask(__name__)
 
 # Key za Last.fm API
 LASTFM_API_KEY = "1f409887755c3e139b87863f4adb90f3"
-
+# Key za flask session
+app.secret_key = '1E49D7841D26ED759CB1FF65DCFC8'
 # Učitavanje engleskog modela spaCy
 nlp = spacy.load("en_core_web_sm")
 
@@ -55,21 +56,38 @@ def recommend_music(user, genre):
 
     return []
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    chat_history = session.get('chat_history', [])
 
-@app.route('/recommend', methods=['POST'])
-def recommend():
-    user_genre = request.form['genre']
+    if request.method == 'POST':
+        user_genre = request.form['genre']
 
-    # Preporuka na osnovu Last.fm API
-    recommended_music = recommend_music("user", user_genre.lower())
+        if not user_genre.strip():
+            return render_template('index.html', genre_not_found=True, user_genre=user_genre, chat_history=chat_history)
 
-    if not recommended_music:
-        return render_template('index.html', genre_not_found=True, user_genre=user_genre)
+        # Preporuka na osnovu Last.fm API
+        recommended_music = recommend_music("user", user_genre.lower())
 
-    return render_template('index.html', recommended_music=recommended_music)
+        if not recommended_music:
+            return render_template('index.html', genre_not_found=True, user_genre=user_genre, chat_history=chat_history)
+
+        chat_history.append({"user": True, "text": user_genre})
+        chat_history.append({"user": False, "songs": recommended_music})
+        session['chat_history'] = chat_history
+
+        return redirect("/")
+
+    return render_template('index.html', chat_history=chat_history)
+
+
+    
+@app.route('/clear_session', methods=['POST'])
+def clear_session():
+    session.clear()
+    return redirect("/")
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+    

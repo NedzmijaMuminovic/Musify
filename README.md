@@ -47,6 +47,9 @@ Visit http://localhost:5000 in your browser.
 
 ## Acknowledgments
 
-- Thanks to Last.fm for providing the awesome API for music data.
+Thanks to Last.fm for providing the awesome API for music data.
 
 Enjoy discovering new music with Musify! 🎵
+
+## Screenshot
+![Screenshot 1](screenshot/Screenshot%202024-01-05%20184217.png)

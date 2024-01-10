@@ -5,15 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="../static/musify-logo.png">
+
     <title>Music Recommender Chatbot</title>
 </head>
 
 <body>
     <form class="actions" action="/clear_session" method="post">
-    <button type="submit" >  <p >Delete chat history</p>
-        <svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" fill="#EF4444"  height="16" viewBox="0 -960 960 960" width="24"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
-  </button>
-         </form>
+        <button type="submit">
+            <p>Delete chat history</p>
+            <svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" fill="#EF4444" height="16"
+                viewBox="0 -960 960 960" width="24">
+                <path
+                    d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
+            </svg>
+        </button>
+    </form>
     <div class="chat-container">
         <span class="label">Chatbot</span>
         <div class="chat">
@@ -35,9 +42,17 @@
             {% else %}
             <div>
                 <span class="label">Chatbot</span>
+                {% if message.no_songs_found %}
                 <div class="chat">
                     <div class="chat-message">
-                        <p>I recommend the following songs:</p>
+                        <p>Sorry we couldn't find any songs based on the provided input. 😔 Please double-check the spelling and give it another shot!
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="chat">
+                    <div class="chat-message">
+                        <p>Awesome choice! I recommend the following songs:</p>
                         <ul>
                             {% for song_info in message.songs %}
                             <li>{{ song_info['title'] }} by {{ song_info['artist'] }}</li>
@@ -45,11 +60,20 @@
                         </ul>
                     </div>
                 </div>
+                <span class="label">Chatbot</span>
+                <div class="chat">
+                    <div class="chat-message">
+                        <p>If there's another music genre on your mind or anything else you'd like to explore, feel free
+                            to let me know! 😊</p>
+
+                    </div>
+                </div>
+            {% endif %}
+
             </div>
             {% endif %}
         </div>
         {% endfor %}
-
     </div>
     <form method="post" class=" chat chat-form">
         <input required type="text" name="genre" placeholder="Type in your favorite genre or artist...">

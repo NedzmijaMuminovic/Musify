@@ -64,18 +64,17 @@ def index():
         user_genre = request.form['genre']
 
         if not user_genre.strip():
-            return render_template('index.html', genre_not_found=True, user_genre=user_genre, chat_history=chat_history)
+            return render_template('index.html',chat_history=chat_history)
 
         # Preporuka na osnovu Last.fm API
         recommended_music = recommend_music("user", user_genre.lower())
+        chat_history.append({"user": True, "text": user_genre})
 
         if not recommended_music:
-            return render_template('index.html', genre_not_found=True, user_genre=user_genre, chat_history=chat_history)
-
-        chat_history.append({"user": True, "text": user_genre})
-        chat_history.append({"user": False, "songs": recommended_music})
+            chat_history.append({"user": False, "no_songs_found": True})
+        else:
+            chat_history.append({"user": False, "no_songs_found": False,  "songs": recommended_music})
         session['chat_history'] = chat_history
-
         return redirect("/")
 
     return render_template('index.html', chat_history=chat_history)
